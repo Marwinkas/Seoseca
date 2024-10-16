@@ -1,0 +1,5 @@
+#!/bin/sh
+cd builddir
+meson compile
+cd src
+./source
