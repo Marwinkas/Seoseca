@@ -7,7 +7,9 @@ namespace gui
 Menu::Menu(sf::RenderWindow& window):
     m_window(window),
     m_cursorType(sf::Cursor::Arrow)
+    
 {
+
 }
 
 

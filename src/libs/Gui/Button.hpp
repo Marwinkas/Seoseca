@@ -26,7 +26,6 @@ void  setSize(float width, float height);
     const sf::String& getString() const;
     int ids = 0;
     bool hopa = false;
-protected:
     // Callbacks
     void onStateChanged(State state) override;
     void onMouseMoved(float x, float y) override;

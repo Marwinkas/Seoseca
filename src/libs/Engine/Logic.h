@@ -2,7 +2,6 @@
 #include <SFML/OpenGL.hpp>
 #include <string>
 #include <cmath>
-#pragma hdrstop
 #include "portable-file-dialogs.h"
 #include "Angle.hpp"
 struct Vector2

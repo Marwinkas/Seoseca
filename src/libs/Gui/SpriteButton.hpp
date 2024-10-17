@@ -12,8 +12,7 @@ namespace gui
 class SpriteButton: public Widget
 {
 public:
-    SpriteButton(const sf::Texture& texture, const sf::String& label = "",int x = 0,int y = 0);
-
+    SpriteButton(const sf::String& texture, const sf::String& label = "",int x = 0,int y = 0);
     void setString(const sf::String& string);
     const sf::String& getString() const;
     int ids = 0;

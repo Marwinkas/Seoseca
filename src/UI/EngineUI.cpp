@@ -1,16 +1,61 @@
 #include "EngineUI.h"
-#include <string>
 #include <iostream>
+#include <string>
+
 bool pressed = false;
+
+bool ctrlpressed = false;
 bool addupdate = false;
+int ctrlvalue = 1;
 float mousex = 0;
 float mousey = 0;
-float buttonposx = 0;
-float buttonposy = 0;
-float buttonsizex = 0;
-float buttonsizey = 0;
+float usedmousedx = 0;
+float usedmousedy = 0;
+float buttonposx[50] = {0};
+float buttonposy[50] = {0};
+float buttonsizex[50] = {0};
+float buttonsizey[50] = {0};
 int addbuttonsize = 0;
+int selectedobject[50] = {0};
+int selectedcount = 0;
+sf::RenderWindow window(sf::VideoMode(1920, 1080), "Create New Project",
+                        sf::Style::Default);
+sf::Text text("Hello world!", gui::Theme::getFont());
+sf::Texture background;
 
+Menu *EngineUIMenu = new Menu(window);
+Menu *EngineUIMenu2 = new Menu(window);
+gui::Layout *EnginePanel2 =
+    EngineUIMenu2->addLayout(Vertical, Vector2(1920, 1080));
+gui::Layout *EnginePanel =
+    EngineUIMenu->addLayout(Vertical, Vector2(1920, 1080));
+gui::Layout *PanelMenu = EnginePanel->addLayout(Horizontal, Vector2(1920, 50));
+gui::Layout *EngineMenu =
+    EnginePanel->addLayout(Horizontal, Vector2(1920, 1030));
+gui::Layout *InspectorMenu =
+    EngineMenu->addLayout(Vertical, Vector2(390, 1030));
+gui::Layout *WindowMenu = EngineMenu->addLayout(Vertical, Vector2(1120, 1030));
+gui::Layout *WindowMenuMenu = WindowMenu->addLayout(Vertical, Vector2(1120, 0));
+gui::Layout *WindowMenuOverview =
+    WindowMenu->addLayout(None, Vector2(1120, 1030));
+gui::Layout *SettingsMenu = EngineMenu->addLayout(Vertical, Vector2(390, 1030));
+gui::FormLayout *SettingsFormMenu =
+    SettingsMenu->addFormLayout(Vector2(390, 1030));
+gui::FormLayout *SettingsFormMenu2 =
+    SettingsMenu->addFormLayout(Vector2(390, 1030));
+gui::FormLayout *SettingsFormMenu3 =
+    SettingsMenu->addFormLayout(Vector2(390, 1030));
+gui::Button *buttoned[500] = {nullptr};
+gui::SpriteButton *insbuttoned[500] = {nullptr};
+gui::SpriteButton *addbutton = new gui::SpriteButton(
+    "/home/marwinkas/Desktop/marwinkaengine/add.png", "", 50, 50);
+gui::Button *editbutton[50] = {nullptr};
+
+gui::TextBox *textbox = {nullptr};
+gui::TextBox *textbox2 = {nullptr};
+gui::TextBox *textbox3 = {nullptr};
+gui::TextBox *textbox4 = {nullptr};
+gui::TextBox *textbox5 = {nullptr};
 gui::Button *buttonmini(string &text) {
   auto *button = new gui::Button(text);
 
@@ -20,133 +65,238 @@ gui::Button *buttonmini(string &text) {
 
   return button;
 }
-void EditScaleButtonsPosition(gui::Button *editbutton[],
-                              gui::Button *testbutton) {
-  sf::Vector2f position = testbutton->getPosition();
-  sf::Vector2f scale = testbutton->getSize();
-  sf::Vector2f editscale = editbutton[0]->getSize();
 
-  float offsetX = position.x - editscale.x;
-  float offsetY = position.y - editscale.y;
+void EditScaleButtonsPosition() {
 
-  editbutton[0]->setPosition(offsetX, offsetY);
-  editbutton[1]->setPosition(offsetX, position.y + scale.y);
-  editbutton[2]->setPosition(position.x + scale.x, offsetY);
-  editbutton[3]->setPosition(position.x + scale.x, position.y + scale.y);
-}
-int selectedobj = 0;
-void ScaleButtonFunction(gui::Button *scalebutton[], gui::Button *button,
-                         sf::RenderWindow &window, gui::Layout *layer) {
-  float currentMouseX = sf::Mouse::getPosition(window).x;
-  float currentMouseY = sf::Mouse::getPosition(window).y;
-  if (mousex == 0) {
-    mousex = currentMouseX;
-    mousey = currentMouseY;
-    buttonposx = button->getPosition().x;
-    buttonposy = button->getPosition().y;
-    buttonsizex = button->getSize().x;
-    buttonsizey = button->getSize().y;
+  for (int i = 0; i < selectedcount; i++) {
+
+    if (buttoned[selectedobject[i]] != nullptr) {
+
+      gui::Button &button = *buttoned[selectedobject[i]];
+      sf::Vector2f position = button.getAbsolutePosition();
+      sf::Vector2f scale = button.getSize();
+      int a = i * 4;
+
+      if (editbutton[i * 4] == nullptr)
+        for (int g = a; g < a + 4; g++) {
+          editbutton[g] = new gui::Button("");
+          editbutton[g]->m_box.setSize(30, 30);
+          editbutton[g]->setSize(30, 30);
+
+          EnginePanel2->add(editbutton[g]);
+        }
+
+      auto &scalebutton = *editbutton[i * 4];
+
+      sf::Vector2f editscale = scalebutton.getSize();
+      float offsetX = position.x - editscale.x;
+      float offsetY = position.y - editscale.y;
+
+      if (editbutton[i * 4] != nullptr)
+        editbutton[i * 4]->setPosition(offsetX, offsetY);
+      if (editbutton[i * 4 + 1] != nullptr)
+        editbutton[i * 4 + 1]->setPosition(offsetX, position.y + scale.y);
+      if (editbutton[i * 4 + 2] != nullptr)
+        editbutton[i * 4 + 2]->setPosition(position.x + scale.x, offsetY);
+      if (editbutton[i * 4 + 3] != nullptr)
+        editbutton[i * 4 + 3]->setPosition(position.x + scale.x,
+                                           position.y + scale.y);
+    }
   }
-
-  float mouseDeltaX = currentMouseX - mousex;
-  float mouseDeltaY = currentMouseY - mousey;
-
-  Vector2 pos = button->getPosition();
-  Vector2 scale = button->getSize();
-
-  if (scalebutton[0]->isFocused()) {
-    scale.x = std::max(0.f, buttonsizex - mouseDeltaX);
-    scale.y = std::max(0.f, buttonsizey - mouseDeltaY);
-    pos.x = buttonposx + mouseDeltaX;
-    pos.y = buttonposy + mouseDeltaY;
-  } else if (scalebutton[1]->isFocused()) {
-    scale.x = std::max(0.f, buttonsizex - mouseDeltaX);
-    scale.y = std::max(0.f, buttonsizey + mouseDeltaY);
-    pos.x = buttonposx + mouseDeltaX;
-  } else if (scalebutton[2]->isFocused()) {
-    scale.x = std::max(0.f, buttonsizex + mouseDeltaX);
-    scale.y = std::max(0.f, buttonsizey - mouseDeltaY);
-    pos.y = buttonposy + mouseDeltaY;
-  } else if (scalebutton[3]->isFocused()) {
-    scale.x = std::max(0.f, buttonsizex + mouseDeltaX);
-    scale.y = std::max(0.f, buttonsizey + mouseDeltaY);
-  } else if (button->isFocused()) {
-    pos.x = buttonposx + mouseDeltaX;
-    pos.y = buttonposy + mouseDeltaY;
-  }
-
-  Vector2 layerscale = layer->getSize();
-  scale.x = std::min(scale.x, layerscale.x - 60);
-  scale.y = std::min(scale.y, layerscale.y - 60);
-
-  Vector2 layerpos = layer->getPosition();
-  pos.x = std::max(layerpos.x + 30,
-                   std::min(pos.x, layerpos.x + layerscale.x - scale.x - 30));
-  pos.y =
-      std::max(30.f, std::min(pos.y, layerpos.y + layerscale.y - scale.y - 30));
-
-  button->setSize(scale.x, scale.y);
-  button->m_box.centerTextHorizontallyVertically(button->m_box.item());
-  button->setPosition(pos.x, pos.y);
-
-  EditScaleButtonsPosition(scalebutton, button);
+  gui::Button &button = *buttoned[selectedobject[selectedcount - 1]];
+  textbox->setText(button.getString());
+  textbox2->setText(to_string(button.getPosition().x));
+  textbox3->setText(to_string(button.getPosition().y));
+  textbox4->setText(to_string(button.getSize().x));
+  textbox5->setText(to_string(button.getSize().y));
 }
-void resetbutton(gui::SpriteButton *button[]) {
-  for (int i = 0; i < 500; i++) {
-    if (button[i] != nullptr) {
-      button[i]->selected = false;
-      button[i]->background.setTexture(button[i]->backgrounddefault);
+
+void ScaleButtonFunction() {
+  float mouseDeltaX = sf::Mouse::getPosition(window).x - mousex;
+  float mouseDeltaY = sf::Mouse::getPosition(window).y - mousey;
+
+  for (int i = 0; i < selectedcount; i++) {
+
+    if (buttoned[selectedobject[i]] != nullptr) {
+
+      auto &button = *buttoned[selectedobject[i]];
+      Vector2 pos = button.getPosition();
+      Vector2 scale = button.getSize();
+
+      auto &scalebutton = *editbutton[i * 4];
+      auto &scalebutton2 = *editbutton[i * 4 + 1];
+      auto &scalebutton3 = *editbutton[i * 4 + 2];
+      auto &scalebutton4 = *editbutton[i * 4 + 3];
+      if (ctrlpressed)
+        ctrlvalue = 10;
+      else
+        ctrlvalue = 1;
+
+      if (scalebutton.isFocused()) {
+        scale.x = std::max(5.f, button.getSize().x - mouseDeltaX + usedmousedx);
+        scale.y = std::max(5.f, button.getSize().y - mouseDeltaY + usedmousedy);
+
+        pos.x = button.getPosition().x + mouseDeltaX - usedmousedx;
+        pos.y = button.getPosition().y + mouseDeltaY - usedmousedy;
+        usedmousedx = mouseDeltaX;
+        usedmousedy = mouseDeltaY;
+        button.setSize(scale.x, scale.y);
+        button.setPosition(pos);
+
+      } else if (scalebutton2.isFocused()) {
+        scale.x = std::max(5.f, button.getSize().x - mouseDeltaX + usedmousedx);
+        scale.y = std::max(5.f, button.getSize().y + mouseDeltaY - usedmousedy);
+        pos.x = button.getPosition().x + mouseDeltaX - usedmousedx;
+        usedmousedx = mouseDeltaX;
+        usedmousedy = mouseDeltaY;
+        button.setSize(scale.x, scale.y);
+        button.setPosition(pos);
+      } else if (scalebutton3.isFocused()) {
+        scale.x = std::max(5.f, button.getSize().x + mouseDeltaX - usedmousedx);
+        scale.y = std::max(5.f, button.getSize().y - mouseDeltaY + usedmousedy);
+        pos.y = button.getPosition().y + mouseDeltaY - usedmousedy;
+        usedmousedx = mouseDeltaX;
+        usedmousedy = mouseDeltaY;
+        button.setSize(scale.x, scale.y);
+        button.setPosition(pos);
+      } else if (scalebutton4.isFocused()) {
+
+        scale.x = button.getSize().x + mouseDeltaX - usedmousedx;
+        scale.y = button.getSize().y + mouseDeltaY - usedmousedy;
+        usedmousedx = mouseDeltaX;
+        usedmousedy = mouseDeltaY;
+        button.setSize(scale.x, scale.y);
+        button.setPosition(pos);
+      }
+
+      else if (button.isFocused()) {
+        for (int g = 0; g < selectedcount; g++) {
+
+          gui::Button &button = *buttoned[selectedobject[g]];
+          pos.x = button.getPosition().x + mouseDeltaX - usedmousedx;
+          pos.y = button.getPosition().y + mouseDeltaY - usedmousedy;
+          button.setPosition(pos);
+        }
+        usedmousedx = mouseDeltaX;
+        usedmousedy = mouseDeltaY;
+      }
+
+      button.m_box.centerTextHorizontallyVertically(button.m_box.item());
+      EditScaleButtonsPosition();
+
     }
   }
 }
-string MenuButtonsName[] = {"File", "Edit", "Window"};
+void resetbutton() {
+  for (int i = 0; i < 500; i++) {
 
-void EngineUI(sf::RenderWindow *window, sf::RenderWindow &renderwindow) {
-  Menu menu(renderwindow);
-  window->setActive(true);
+    if (insbuttoned[i] != nullptr) {
+      auto &button = *insbuttoned[i];
+      button.selected = false;
+      button.background.setTexture(button.backgrounddefault);
+    }
+  }
+}
 
-  sf::Text text("Hello world!", gui::Theme::getFont());
-  text.setOrigin(text.getLocalBounds().width / 2,
-                 text.getLocalBounds().height / 2);
-  text.setPosition(480, 240);
+void updatelistbutton() {
+  for (int i = 0; i < 500; i++) {
+    if (buttoned[i] != nullptr && insbuttoned[i] != nullptr) {
+      auto &button = *buttoned[i];
+      auto &button2 = *insbuttoned[i];
+      button.setCallback([&button, &button2, i] {
+        if (ctrlpressed) {
+            int selectedIndex = 0;
+            bool found = false;
+            for (int g = 0; g < selectedcount; g++) {
+              if (selectedobject[g] == i) {
+                found = true;
+                selectedIndex = g; // Save the index for removal
+                break;             // Exit the loop early once found
+              }
+            }
+            if (!found) {
+              selectedobject[selectedcount] = i;
+              selectedcount++;
+              button2.selected = true;
+              button2.background.setTexture(button2.backgroundselected);
+            }
+            else {
+              for (int d = selectedIndex; d < selectedcount - 1; d++) {
+                selectedobject[d] = selectedobject[d + 1]; // Shift left
+              }
+              selectedcount--;
+              button2.selected = false;
+              button2.background.setTexture(button2.backgrounddefault);
+            }
 
-  gui::Button *selectedobject = new gui::Button("");
-  gui::Button *buttoned[500] = {nullptr};
-  gui::SpriteButton *insbuttoned[500] = {nullptr};
+            EnginePanel2->reset();
+            for (int i = 0; i < 50; i++) {
+              editbutton[i] = {nullptr};
+            }
+            EditScaleButtonsPosition();
+            
+          }
 
+        if (!button2.selected && !ctrlpressed) {
+           {
+            bool da = false;
+            for (int g = 0; g < selectedcount; g++) {
+              if (selectedobject[g] == i) {
+                da = true;
+              }
+            }
+            if (!da) {
+              selectedobject[0] = i;
+              selectedcount = 0;
+              resetbutton();
+              EnginePanel2->reset();
+              for (int i = 0; i < 50; i++) {
+                editbutton[i] = {nullptr};
+              }
+              EditScaleButtonsPosition();
+            }
+            selectedcount++;
+            button2.selected = true;
+            button2.background.setTexture(button2.backgroundselected);
+          }
+        }
+
+        
+        
+
+        EditScaleButtonsPosition();
+      });
+
+      button2.setCallback([&button, &button2, i] {
+        resetbutton();
+        button2.selected = true;
+        button2.background.setTexture(button2.backgroundselected);
+        if (ctrlpressed)
+          selectedobject[selectedcount] = i;
+        else {
+          selectedcount = 0;
+          selectedobject[0] = i;
+        }
+        selectedcount++;
+
+        EditScaleButtonsPosition();
+      });
+    }
+  }
+}
+void EngineUI() {
   Theme::textSize = 14;
-  Theme::MARGIN = 0;
 
-  gui::Layout *EnginePanel = menu.addLayout();
   EnginePanel->orientation = Vertical;
-  EnginePanel->setSize(1920, 1080);
+
   sf::Texture panelimage;
   panelimage.loadFromFile(
       "/home/marwinkas/Desktop/marwinkaengine/upperpanel.png");
-  gui::Layout *PanelMenu = EnginePanel->addLayout();
-  PanelMenu->orientation = Horizontal;
-  PanelMenu->setSize(1920, 50);
+
   PanelMenu->padding.left = 10;
   PanelMenu->havebackground = true;
   PanelMenu->background.setTexture(panelimage);
   PanelMenu->recomputeGeometry();
-
-  gui::Layout *EngineMenu = EnginePanel->addLayout();
-  EngineMenu->orientation = Horizontal;
-  EngineMenu->setSize(1920, 1030);
-
-  gui::Layout *InspectorMenu = EngineMenu->addLayout();
-  InspectorMenu->orientation = Vertical;
-  InspectorMenu->setSize(390, 970);
-
-  gui::Layout *InspectorMenuMenu = InspectorMenu->addLayout();
-  InspectorMenuMenu->orientation = Horizontal;
-  InspectorMenuMenu->setSize(400, 0);
-
-  sf::Texture addimage;
-  addimage.loadFromFile("/home/marwinkas/Desktop/marwinkaengine/add.png");
-
-  gui::SpriteButton *addbutton = new gui::SpriteButton(addimage, "", 50, 50);
 
   addbutton->backgroundclick.loadFromFile(
       "/home/marwinkas/Desktop/marwinkaengine/addclick.png");
@@ -154,33 +304,11 @@ void EngineUI(sf::RenderWindow *window, sf::RenderWindow &renderwindow) {
       "/home/marwinkas/Desktop/marwinkaengine/addhover.png");
   addbutton->backgrounddefault.loadFromFile(
       "/home/marwinkas/Desktop/marwinkaengine/add.png");
-  addbutton->setSize(50, 50);
+  addbutton->backgroundselected.loadFromFile(
+      "/home/marwinkas/Desktop/marwinkaengine/addclick.png");
+  addbutton->background.setTexture(addbutton->backgrounddefault);
 
   PanelMenu->add(addbutton);
-  PanelMenu->recomputeGeometry();
-
-  gui::Layout *WindowMenu = EngineMenu->addLayout();
-  WindowMenu->orientation = Vertical;
-
-  gui::Layout *WindowMenuMenu = WindowMenu->addLayout();
-  WindowMenuMenu->orientation = Vertical;
-
-  gui::Layout *WindowMenuOverview = WindowMenu->addLayout();
-  WindowMenuOverview->orientation = None;
-  WindowMenuOverview->setSize(1920 - 800, 1080);
-
-  gui::Layout *SettingsMenu = EngineMenu->addLayout();
-  SettingsMenu->orientation = Vertical;
-  SettingsMenu->setSize(390, 970);
-
-  gui::FormLayout *SettingsFormMenu = SettingsMenu->addFormLayout();
-  SettingsFormMenu->orientation = Vertical;
-  SettingsFormMenu->setSize(390, 970);
-
-    gui::FormLayout *SettingsFormMenu2 = SettingsMenu->addFormLayout();
-  SettingsFormMenu2->orientation = Vertical;
-  SettingsFormMenu2->setSize(390, 970);
-  sf::Texture background;
 
   background.loadFromFile("/home/marwinkas/Desktop/marwinkaengine/panels.png");
   SettingsMenu->havebackground = true;
@@ -193,24 +321,114 @@ void EngineUI(sf::RenderWindow *window, sf::RenderWindow &renderwindow) {
   InspectorMenu->background.setTexture(background);
   InspectorMenu->recomputeGeometry();
 
-  gui::Button *editbutton[4];
-  for (int i = 0; i < 4; i++) {
-    editbutton[i] = new gui::Button("");
-    editbutton[i]->m_box.setSize(30, 30);
-    editbutton[i]->setSize(30, 30);
-    WindowMenuOverview->add(editbutton[i]);
-  }
+  textbox2 = new gui::TextBox();
+  textbox2->setText("");
+  textbox2->setCallback([] {
+    try {
+      string da = textbox2->getText();
+      float value = std::stof(da);
+
+    } catch (const std::invalid_argument &e) {
+      std::cerr << "Ошибка: введено не число." << std::endl;
+    } catch (const std::out_of_range &e) {
+      std::cerr << "Ошибка: число вне допустимого диапазона." << std::endl;
+    }
+    EditScaleButtonsPosition();
+  });
+
+  textbox3 = new gui::TextBox();
+  textbox3->setText("");
+  textbox3->setCallback([] {
+    try {
+      string da = textbox3->getText();
+      float value = std::stof(da);
+
+    } catch (const std::invalid_argument &e) {
+      std::cerr << "Ошибка: введено не число." << std::endl;
+    } catch (const std::out_of_range &e) {
+      std::cerr << "Ошибка: число вне допустимого диапазона." << std::endl;
+    }
+    EditScaleButtonsPosition();
+  });
+
+  textbox2->setPlaceholder("");
+  textbox2->setSize(100, 25);
+  textbox3->setSize(100, 25);
+
+  textbox2->m_box.setSize(100, 25);
+  textbox3->m_box.setSize(100, 25);
+  SettingsFormMenu2->addRow("Coordinates", textbox2, textbox3);
+
+  textbox = new gui::TextBox();
+  textbox->setText("");
+  textbox->setCallback([] {
+    buttoned[selectedobject[sizeof(selectedobject) / sizeof(selectedobject[0])]]
+        ->setString(textbox->getText());
+    insbuttoned[selectedobject[sizeof(selectedobject) /
+                               sizeof(selectedobject[0])]]
+        ->setString(textbox->getText());
+  });
+  textbox->setPlaceholder("");
+  SettingsFormMenu->addRow("Name", textbox);
+
+  textbox4 = new gui::TextBox();
+  textbox4->setText("");
+  textbox4->setCallback([] {
+    try {
+      string da = textbox4->getText();
+      float value = std::stof(da);
+      buttoned[selectedobject[sizeof(selectedobject) /
+                              sizeof(selectedobject[0])]]
+          ->setSize(value, buttoned[selectedobject[sizeof(selectedobject) /
+                                                   sizeof(selectedobject[0])]]
+                               ->getSize()
+                               .y);
+
+    } catch (const std::invalid_argument &e) {
+      std::cerr << "Ошибка: введено не число." << std::endl;
+    } catch (const std::out_of_range &e) {
+      std::cerr << "Ошибка: число вне допустимого диапазона." << std::endl;
+    }
+    EditScaleButtonsPosition();
+  });
+
+  textbox5 = new gui::TextBox();
+  textbox5->setText("");
+  textbox5->setCallback([] {
+    try {
+      string da = textbox5->getText();
+      float value = std::stof(da);
+      buttoned[selectedobject[sizeof(selectedobject) /
+                              sizeof(selectedobject[0])]]
+          ->setSize(buttoned[selectedobject[sizeof(selectedobject) /
+                                            sizeof(selectedobject[0])]]
+                        ->getSize()
+                        .x,
+                    value);
+    } catch (const std::invalid_argument &e) {
+      std::cerr << "Ошибка: введено не число." << std::endl;
+    } catch (const std::out_of_range &e) {
+      std::cerr << "Ошибка: число вне допустимого диапазона." << std::endl;
+    }
+    EditScaleButtonsPosition();
+  });
+
+  textbox5->setPlaceholder("");
+  textbox4->setSize(100, 25);
+  textbox5->setSize(100, 25);
+
+  textbox4->m_box.setSize(100, 25);
+  textbox5->m_box.setSize(100, 25);
+  SettingsFormMenu3->addRow("Size:", textbox4, textbox5);
 
   addbutton->setCallback([&] {
-    sf::Texture addimage;
-    addimage.loadFromFile("/home/marwinkas/Desktop/marwinkaengine/btn.png");
     gui::SpriteButton *inspectornewbtn = new gui::SpriteButton(
-        addimage, "test",
+        "/home/marwinkas/Desktop/marwinkaengine/btn.png", "test",
         InspectorMenu->getSize().x - InspectorMenu->margin.left -
             InspectorMenu->margin.right - InspectorMenu->padding.left -
             InspectorMenu->padding.right,
         30);
-    inspectornewbtn->background.setTexture(inspectornewbtn->backgrounddefault);
+
     inspectornewbtn->backgroundclick.loadFromFile(
         "/home/marwinkas/Desktop/marwinkaengine/btnclicked.png");
     inspectornewbtn->backgroundhover.loadFromFile(
@@ -219,6 +437,7 @@ void EngineUI(sf::RenderWindow *window, sf::RenderWindow &renderwindow) {
         "/home/marwinkas/Desktop/marwinkaengine/btn.png");
     inspectornewbtn->backgroundselected.loadFromFile(
         "/home/marwinkas/Desktop/marwinkaengine/btnselected.png");
+    inspectornewbtn->background.setTexture(inspectornewbtn->backgrounddefault);
     gui::Button *addbtn = new gui::Button("Test");
     addbtn->m_box.centerTextHorizontallyVertically(addbtn->m_box.item());
     sf::Texture addimages;
@@ -241,62 +460,23 @@ void EngineUI(sf::RenderWindow *window, sf::RenderWindow &renderwindow) {
     insbuttoned[addbuttonsize] = inspectornewbtn;
     buttoned[addbuttonsize]->setSize(100, 100);
     addbuttonsize++;
-    addupdate = true;
+    updatelistbutton();
   });
-  gui::TextBox *textbox2 = new gui::TextBox();
-  textbox2->setText("Hello world!");
-  textbox2->setCallback(
-      [&editbutton, &selectedobject, &textbox2, &buttoned,
-                         &insbuttoned] {
-    
-    try {
-      string da = textbox2->getText();
-      int value = std::stoi(da);
-      buttoned[selectedobj]->setPosition(buttoned[selectedobj]->getSize().x,
-                                         value);
-    } catch (const std::invalid_argument &e) {
-      std::cerr << "Ошибка: введено не число." << std::endl;
-    } catch (const std::out_of_range &e) {
-      std::cerr << "Ошибка: число вне допустимого диапазона." << std::endl;
-    }
-    EditScaleButtonsPosition(editbutton, selectedobject);
-      });
 
-  gui::TextBox *textbox3 = new gui::TextBox();
-  textbox3->setText("Hello world!");
-  textbox3->setCallback([&editbutton, &selectedobject, &textbox3, &buttoned,
-                         &insbuttoned] {
-    
-    try {
-      string da = textbox3->getText();
-      int value = std::stoi(da);
-      buttoned[selectedobj]->setPosition(
-                                         value,buttoned[selectedobj]->getSize().y);
-    } catch (const std::invalid_argument &e) {
-      std::cerr << "Ошибка: введено не число." << std::endl;
-    } catch (const std::out_of_range &e) {
-      std::cerr << "Ошибка: число вне допустимого диапазона." << std::endl;
-    }
-    EditScaleButtonsPosition(editbutton, selectedobject);
-  });
-  textbox2->setPlaceholder("Type something!");
-  SettingsFormMenu->addRow("Coordinates", textbox2, textbox3);
-
-  gui::TextBox *textbox = new gui::TextBox();
-  textbox->setText("Hello world!");
-  textbox->setCallback([&textbox, &buttoned, &insbuttoned] {
-    buttoned[selectedobj]->setString(textbox->getText());
-    insbuttoned[selectedobj]->setString(textbox->getText());
-  });
-  textbox->setPlaceholder("Type something!");
-  SettingsFormMenu2->addRow("Name", textbox);
-
-  while (window->isOpen()) {
+  while (window.isOpen()) {
     sf::Event event;
-    while (window->pollEvent(event)) {
-      menu.onEvent(event);
+    while (window.pollEvent(event)) {
+      EngineUIMenu->onEvent(event);
+      EngineUIMenu2->onEvent(event);
       if (event.type == sf::Event::Closed)
-        window->close();
+        window.close();
+
+      if (event.type == sf::Event::KeyPressed &&
+          event.mouseButton.button == sf::Keyboard::LControl)
+        ctrlpressed = true;
+      else if (event.type == sf::Event::KeyReleased &&
+               event.mouseButton.button == sf::Keyboard::LControl)
+        ctrlpressed = false;
 
       if (event.type == sf::Event::MouseButtonPressed &&
           event.mouseButton.button == sf::Mouse::Left)
@@ -306,51 +486,31 @@ void EngineUI(sf::RenderWindow *window, sf::RenderWindow &renderwindow) {
         pressed = false;
 
       if (pressed) {
-        ScaleButtonFunction(editbutton, selectedobject, renderwindow,
-                            WindowMenuOverview);
-      } else if (mousex != 0) {
-        mousex = mousey = buttonposx = buttonposy = buttonsizex = buttonsizey =
-            0;
-      }
+        float currentMouseX = sf::Mouse::getPosition(window).x;
+        float currentMouseY = sf::Mouse::getPosition(window).y;
 
-      if (addupdate) {
-        for (int i = 0; i < 500; i++) {
-          if (buttoned[i] != nullptr) {
-            auto button = buttoned[i];
-            SpriteButton *button2 = insbuttoned[i];
-            buttoned[i]->setCallback([&editbutton, &selectedobject, button,
-                                      button2, &insbuttoned, &textbox,&textbox2,&textbox3, i] {
-              resetbutton(insbuttoned);
-              button2->selected = true;
-              button2->background.setTexture(button2->backgroundselected);
-              selectedobject = button;
-              selectedobj = i;
-              textbox->setText(button->getString());
-              textbox2->setText(to_string(button->getPosition().x));
-              textbox3->setText(to_string(button->getPosition().y));
-              EditScaleButtonsPosition(editbutton, selectedobject);
-            });
-            insbuttoned[i]->setCallback([&editbutton, &selectedobject, button,
-                                         button2, &insbuttoned, &textbox, i,&textbox2,&textbox3] {
-              resetbutton(insbuttoned);
-              button2->selected = true;
-              button2->background.setTexture(button2->backgroundselected);
-              selectedobject = button;
-              selectedobj = i;
-              textbox->setText(button->getString());
-                            textbox2->setText(to_string(button->getPosition().x));
-              textbox3->setText(to_string(button->getPosition().y));
-              EditScaleButtonsPosition(editbutton, selectedobject);
-            });
-          }
+        if (mousex == 0) {
+          mousex = currentMouseX;
+          mousey = currentMouseY;
         }
-        addupdate = false;
-      }
-    }
+        ScaleButtonFunction();
 
-    window->clear(Theme::windowBgColor);
-    window->draw(menu);
-    window->display();
+      }
+
+      else{
+
+
+
+      
+      for (int i = 0; i < 50; i++)
+          mousex = mousey = usedmousedy = usedmousedx = 0;
+      }
+        
+    }
+    window.clear(Theme::windowBgColor);
+    window.draw(*EngineUIMenu);
+    window.draw(*EngineUIMenu2);
+    window.display();
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   }

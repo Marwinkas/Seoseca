@@ -13,7 +13,10 @@ class FormLayout: public Layout
 {
 public:
     FormLayout();
+        FormLayout(Vector2 size){
+         this->m_size = size;
 
+    };
     /**
      * Add a new label/widget row in the form
      * @param label: label displayed before the widget

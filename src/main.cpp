@@ -2,10 +2,7 @@
 
 #include "UI/EngineUI.h"
 
-sf::RenderWindow windows(sf::VideoMode(1920, 1080), "Seoseca",
-                         sf::Style::Default);
-sf::RenderWindow window2(sf::VideoMode(800, 300), "Seoseca", sf::Style::Close);
-Menu menu(windows);
+Menu menu(window);
 sf::Color hex2color(const std::string &hexcolor) {
   sf::Color color = sf::Color::Black;
   if (hexcolor.size() == 7) // #ffffff
@@ -34,9 +31,9 @@ struct Themes {
   sf::Color backgroundColor;
   std::string texturePath;
 };
-void CreateProjectWindow(sf::RenderWindow *window) {
-  Menu menu2(window2);
-  window->setActive(true);
+void CreateProjectWindow() {
+  Menu menu2(window);
+  window.setActive(true);
   sf::Text text("Hello world!", gui::Theme::getFont());
   text.setOrigin(text.getLocalBounds().width / 2,
                  text.getLocalBounds().height / 2);
@@ -89,38 +86,41 @@ void CreateProjectWindow(sf::RenderWindow *window) {
   hbox->add(buttons);
 
   gui::Button *buttons3 = new gui::Button("Create Project");
-  buttons3->setCallback([&] { window->close(); });
+  buttons3->setCallback([&] { window.close(); });
   buttons3->setSize(Vector2(250, buttons3->m_box.getSize().y));
   buttons3->m_box.setSize(250, buttons3->m_box.getSize().y);
   buttons3->m_box.centerTextHorizontally(buttons3->m_box.item());
   hbox2->add(buttons3);
 
   gui::Button *buttons2 = new gui::Button("Cancel");
-  buttons2->setCallback([&] { window->close(); });
+  buttons2->setCallback([&] { window.close(); });
   buttons2->setSize(Vector2(150, buttons2->m_box.getSize().y));
   buttons2->m_box.setSize(150, buttons2->m_box.getSize().y);
   buttons2->m_box.centerTextHorizontally(buttons2->m_box.item());
 
   hbox2->add(buttons2);
   buttons2->setPosition(Vector2(312, 0));
-  while (window->isOpen()) {
+  while (window.isOpen()) {
     sf::Event event;
-    while (window->pollEvent(event)) {
+    while (window.pollEvent(event)) {
       menu2.onEvent(event);
       if (event.type == sf::Event::Closed)
-        window->close();
+        window.close();
     }
-    window->clear(Theme::windowBgColor);
+    window.clear(Theme::windowBgColor);
 
-    window->draw(menu2);
-    window->display();
+    window.draw(menu2);
+    window.display();
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   }
 }
+bool opens = false;
 
-void renderingThread(sf::RenderWindow *window) {
-  window->setActive(true);
+double mousefix = 1;
+double mousefix2 = 1;
+int main() {
+  window.setActive(true);
   Themes defaultTheme = {hex2color("#1b1e20"), "demo/texture-default.png"};
   gui::Theme::loadTexture(defaultTheme.texturePath);
   gui::Theme::windowBgColor = defaultTheme.backgroundColor;
@@ -167,26 +167,15 @@ void renderingThread(sf::RenderWindow *window) {
   ProjectsMenu->add(button);
   ProjectsMenu->add(button2);
 
+
   button->setCallback([] {
-    window2.create(sf::VideoMode(1920, 1080), "Create New Project",
-                   sf::Style::Close);
-    EngineUI(&window2, window2);
+
+    if(opens)EngineUI();
+    opens = true;
   });
 
-  while (window->isOpen()) {
-    window->clear(Theme::windowBgColor);
-    // Render menu
-    window->draw(menu);
 
-    window->display();
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  }
-}
-
-double mousefix = 1;
-double mousefix2 = 1;
-int main() {
   sf::ContextSettings settings;
   settings.depthBits = 24;
   settings.stencilBits = 8;
@@ -194,23 +183,26 @@ int main() {
   settings.majorVersion = 3;
   settings.minorVersion = 0;
 
-  windows.setActive(false);
-  window2.setActive(false);
-  sf::Thread thread(&renderingThread, &windows);
-  thread.launch();
+  window.setActive(false);
 
   // Define a callback
-  window2.close();
-  while (windows.isOpen()) {
+  while (window.isOpen()) {
     sf::Vector2i cursorPos;
 
-    cursorPos = sf::Mouse::getPosition(windows);
+    cursorPos = sf::Mouse::getPosition(window);
     sf::Event event;
-    while (windows.pollEvent(event)) {
+    while (window.pollEvent(event)) {
       menu.onEvent(event);
       if (event.type == sf::Event::Closed)
-        windows.close();
+        window.close();
     }
+        window.clear(Theme::windowBgColor);
+    // Render menu
+    window.draw(menu);
+
+    window.display();
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   }
 
   return 0;

@@ -31,12 +31,13 @@ void SpriteButton::setIcon(const sf::Texture& texture){
     }
 }
 
-SpriteButton::SpriteButton(const sf::Texture& texture, const sf::String& string,int x,int y):
+SpriteButton::SpriteButton(const sf::String& texture, const sf::String& string,int x,int y):
     Widget(),
     m_pressed(false)
 {
-
-    background.setTexture(texture);
+    sf::Texture txt;
+    txt.loadFromFile(texture);
+    background.setTexture(txt);
     background.setScale((float)(1 / (float)((float)background.getTexture()->getSize().x / (float)getSize().x)), (float)(1 / (float)((float)background.getTexture()->getSize().y / (float)getSize().y)));
 
     setSize(x,y);
@@ -46,7 +47,7 @@ SpriteButton::SpriteButton(const sf::Texture& texture, const sf::String& string,
     m_text.setCharacterSize(Theme::textSize);
 
     setString(string);
-    
+    setSize(x,y);
 }
 
 

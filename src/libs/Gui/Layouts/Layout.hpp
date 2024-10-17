@@ -27,12 +27,15 @@ public:
     };
         Layout(Orientation orientation,Vector2 size){
         this->orientation = orientation;
-        setSize(size.x,size.y);
+         this->m_size.y = size.x;
+         this->m_size.x = size.y;
+
     };
             Layout(Orientation orientation,Vector2 size,Vector2 pos){
         this->orientation = orientation;
-        setSize(size.x,size.y);
-        setPosition(pos.x,pos.y);
+         this->m_size.x = size.x;
+         this->m_size.y = size.y;
+         this->m_position = pos;
     };
     ~Layout();
     Indentation padding = Indentation(0,0);
@@ -55,10 +58,12 @@ public:
     Widget* add(Widget* widget);
    void remove(int id);
    void deletes(int id);
+   void reset();
     /// Helpers
     Button* addButton(const sf::String& string, std::function<void(void)> callback);
     Label* addLabel(const sf::String& string);
     FormLayout* addFormLayout();
+    FormLayout* addFormLayout(Vector2 size);
     Layout* addLayout();
     Layout* addLayout(Orientation orientation);
     Layout* addLayout(Orientation orientation,Vector2 size);

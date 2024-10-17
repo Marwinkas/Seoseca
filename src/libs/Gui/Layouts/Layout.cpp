@@ -120,7 +120,14 @@ void Layout::deletes(int id) {
   delete findwidget;
 }
 
+void Layout::reset(){
+ m_first = m_last = nullptr;
 
+
+  objectcount = 0;
+  recomputeGeometry();
+
+}
 Button *Layout::addButton(const sf::String &string,
                           std::function<void(void)> callback) {
   Button *button = new Button(string);
@@ -251,8 +258,7 @@ void Layout::onTextEntered(sf::Uint32 unicode) {
 }
 
 void Layout::draw(sf::RenderTarget &target, sf::RenderStates states) const {
-  if (havebackground)
-    target.draw(background, states);
+  if (havebackground) target.draw(background, states);
   states.transform *= getTransform();
   for (const Widget *widget = m_first; widget != nullptr;
        widget = widget->m_next) {
@@ -334,29 +340,43 @@ FormLayout *Layout::addFormLayout() {
   add(form);
   return form;
 }
+FormLayout *Layout::addFormLayout(Vector2 size) {
+  FormLayout *form = new FormLayout(size);
+  add(form);
+  return form;
+}
 Layout *Layout::addLayout() {
   Layout *form = new Layout();
   add(form);
   return form;
 }
 Layout *Layout::addLayout(Orientation orientation) {
-  Layout *form = new Layout();
+  Layout *form = new Layout(orientation);
   add(form);
-  form->orientation = orientation;
+
   return form;
 }
 Layout *Layout::addLayout(Orientation orientation, Vector2 size) {
-  Layout *form = new Layout();
-  form->orientation = orientation;
-  form->setSize(size.x,size.y);
+  
+  Layout *form = new Layout(orientation,size);
+  Vector2 sz = m_size;
+  Vector2 sz2 = form->m_size;
+  add(form);
+  
+  m_size.x = sz.x;
+  m_size.y = sz.y;
+
+  form->m_size.x = sz2.x;
+  form->m_size.y = sz2.y;
+
+  setSize(m_size.x,m_size.y);
+  form->setSize(form->m_size.x,form->m_size.y);
   return form;
 }
+
 Layout *Layout::addLayout(Orientation orientation, Vector2 size, Vector2 pos) {
-  Layout *form = new Layout();
+  Layout *form = new Layout(orientation,size,pos);
   add(form);
-  form->orientation = orientation;
-  form->setSize(size.x,size.y);
-  form->setPosition(pos.x,pos.y);
   return form;
 }
   void Layout::setSize(const sf::Vector2f& size)

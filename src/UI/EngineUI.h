@@ -6,4 +6,6 @@
 #include <iosfwd>
 using namespace gui;
 using namespace std;
-void EngineUI(sf::RenderWindow *window,sf::RenderWindow &renderwindow);
+void EngineUI();
+
+extern sf::RenderWindow window;
